@@ -1,27 +1,47 @@
 package trappingwater
 
-type Pillar struct {
-	Index     int
-	LoweAfter int
-	Val       int
-}
+import (
+  "math"
+  "fmt"
+)
 
-func Trap(height []int) int {
-	queue := make([]Pillar, len(height))
+func Trap(height []int) (trapped int) {
+  if len(height) < 2 {
+    return 0
+  }
 
-	for index, h := range height {
+  pillars := make([]int, 0, len(height))
 
-		curr := Pillar{Index: index, Val: h}
+  updateTrapped := func (i int) {
+    if i - pillars[len(pillars)-1] >= 2 {
+        top := pillars[len(pillars)-1]
+        topNormalizedH := height[top] - height[top+1]
+        currNormedH := height[i] - height[i-1]
+        trap := int(math.Min(float64(topNormalizedH), float64(currNormedH))) * (i - (pillars[len(pillars)-1]+1))
+        fmt.Printf("trap %d\n", trap)
+        trapped += trap
+    }
+  }
 
-		if len(queue) == 0 {
-			queue = append(queue, curr)
-		} else {
-			if queue[len(queue)-1].Val > curr.Val {
-				queue[len(queue)-1].LoweAfter = curr.Val
-				queue = append(queue, curr)
-			}
-		}
 
-	}
+  for i := 1; i < len(height); i++ {
+    if height[i] == 0 {
+      continue
+    }
+    
+    enteredLoop := false
 
+    for len(pillars) > 0 && height[i] >= height[pillars[len(pillars)-1]] {
+      enteredLoop = true
+      updateTrapped(i)
+      pillars = pillars[:len(pillars)-1]
+    }
+
+    if len(pillars) > 0 && !enteredLoop {
+      updateTrapped(i)
+    }
+    pillars = append(pillars, i)
+  }
+
+  return
 }
